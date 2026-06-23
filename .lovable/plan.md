@@ -1,75 +1,94 @@
+# Sequential Loop Architecture for Multi-Screen Flow
 
-## UX Audit Engine — Build Plan
+Switch the audit from a single-screenshot input to a **flow gallery** (Screen 1…N) and process each screen one-by-one, passing a compact `summary_state` from the previous screen as context. Final dashboard merges all findings.
 
-A single-page SaaS-style tool that takes UX context + a screenshot and returns a mocked heuristic audit dashboard.
+This iteration keeps **mock processing** (no external API) — same constraint as the previous step. Wiring to Lovable AI Gateway can be a follow-up once you confirm.
 
-### Scope
-- One route: `/` (replace placeholder in `src/routes/index.tsx`).
-- No backend, no Lovable Cloud — fully client-side with internal mock JSON.
-- React + Tailwind v4 (already configured) + `lucide-react` (already a shadcn dep).
+## UX
 
-### Layout
-Two-column responsive layout (stacks on mobile):
-- **Left (≈40%)**: Input form panel.
-- **Right (≈60%)**: Results dashboard.
-Sticky top header with product name, subtle logo mark, and short tagline.
+**Left panel — Flow input**
+- Keep Domain / Persona / Goal fields.
+- Replace single Dropzone with a **multi-image gallery uploader**:
+  - Drop or browse → multiple files accepted at once.
+  - Each thumbnail shows ordinal badge `Screen 1`, `Screen 2`, … (order = upload order).
+  - Reorder via drag handle, remove via X, add more appends to the end.
+  - Renumbering is automatic on any change.
+- Submit button: `Analyze Flow (N screens)`, disabled until context fields + ≥1 screen.
 
-### Left panel — Input form
-Fields (all required to enable submit):
-1. `Product Domain & Stage` — text input (e.g. "Fintech – MVP").
-2. `Target User Persona` — textarea.
-3. `Current User Goal` — textarea.
-4. **Screenshot uploader** — drag-and-drop zone + click-to-browse:
-   - Accepts single image (png/jpg/webp).
-   - Shows thumbnail preview with filename, size, and a remove (X) button after upload.
-   - Drag-over visual state (border + bg tint).
-5. **Analyze Interface** button:
-   - Disabled until all 4 fields filled.
-   - On click: 1.2s simulated loading (spinner + "Analyzing interface…"), then populate dashboard from mock JSON.
+**Right panel — Sequential progress + dashboard**
+- While running, show a stepper:
+  - `Screen 1 ✓ analyzed → Screen 2 ⏳ analyzing… → Screen 3 ⋯ queued`
+  - Each completed step is expandable to peek at that screen's `summary_state` and finding count.
+- When all screens complete:
+  - **Overall health gauge** (weighted across all findings).
+  - **Per-screen tabs / segmented control** to filter findings by screen, plus an "All screens" view.
+  - Severity chip summary (Critical / Major / Minor / Cosmetic) — global + per-screen.
+  - Finding cards add a `Screen N` badge alongside severity.
 
-### Right panel — Results dashboard
-Two states:
-- **Empty state**: centered icon + "Run an analysis to see results" copy.
-- **Results state**:
-  - **Overall Health Score**: circular gauge (SVG, stroke-dasharray animation) showing 0–100. Color shifts with score (red <50, amber 50–74, green ≥75). Subtitle: "Based on N findings across heuristic categories".
-  - Summary chips: count of issues per severity (Critical / Major / Minor / Cosmetic).
-  - **Findings list**: cards sorted by severity desc, each card shows:
-    - Severity badge (color-coded left border + pill label).
-    - Location (component path/area).
-    - Problem (bold title).
-    - Justification (with heuristic reference, e.g. "Nielsen #4 — Consistency").
-    - Recommendation.
-    - Footer row: `Dev Effort` (Low/Med/High badge) + `AI Confidence` (small horizontal bar with %).
+## Sequential Loop (mock backend)
 
-### Severity color tokens
-Defined in `src/styles.css` as semantic tokens (no hardcoded hex in components):
-- `--severity-critical` red
-- `--severity-major` orange
-- `--severity-minor` yellow
-- `--severity-cosmetic` gray
-Plus `-foreground` variants and registered in `@theme inline` so `bg-severity-critical` etc. work.
+A single async runner processes screens in order:
 
-### Mock data
-`src/lib/mock-audit.ts` exports a function `generateMockAudit()` returning:
-```ts
-{ overallScore: 68, findings: [ { id, severity: 1-4, location, problem, justification, recommendation, devEffort: 'Low'|'Medium'|'High', aiConfidence: 0-100 }, ... ] }
+```text
+for i in 0..N-1:
+  prev = i === 0 ? null : results[i-1].summary_state
+  result_i = analyzeScreen({
+    screen: screens[i],          // file + ordinal
+    context: { domain, persona, goal },
+    pastContext: prev,           // ← carries forward, no prior images
+  })
+  results.push(result_i)
+  emit progress(i, result_i)
 ```
-~6 realistic findings spanning all 4 severities.
 
-### File structure
-- `src/routes/index.tsx` — page shell + header + 2-column grid, owns form + result state.
-- `src/components/audit/InputForm.tsx` — fields, dropzone, submit.
-- `src/components/audit/Dropzone.tsx` — drag-drop + preview.
-- `src/components/audit/ResultsDashboard.tsx` — empty/loading/results states.
-- `src/components/audit/HealthGauge.tsx` — SVG circular gauge.
-- `src/components/audit/FindingCard.tsx` — single finding card.
-- `src/lib/mock-audit.ts` — mock data + types.
-- `src/styles.css` — add severity tokens.
+Each `analyzeScreen` returns:
+```ts
+{
+  screenIndex: number,
+  summary_state: string,    // 1–2 sentence recap of what this screen is/does, used as next screen's pastContext
+  findings: Finding[],      // same shape as today + screenIndex field
+}
+```
 
-### Design language
-Clean SaaS aesthetic: white surfaces, soft `border` lines, generous spacing, `rounded-xl`, subtle shadows, monochrome neutrals with severity colors as the only saturated accents. Sans-serif (system stack — no extra font fetch unless requested). Inter-like feel via Tailwind defaults.
+The mock implementation:
+- Simulates ~700–1200 ms per screen via `setTimeout`.
+- Picks 1–3 findings per screen from a seeded pool keyed by `screenIndex` so results feel coherent.
+- Builds a deterministic `summary_state` like `"Screen 2 — Login form with email/password and SSO options; user is mid-authentication."` that the next mock step echoes into its justification to make the chaining visible.
+- Exposes progress via a callback so UI can stream updates.
 
-### Out of scope (for this iteration)
-- Real AI/vision analysis, file persistence, multi-screenshot, export/share, auth.
+Aggregation:
+- `overallScore` = weighted penalty across **all** findings (existing formula reused).
+- `findings` = concatenation of all per-screen findings, tagged with `screenIndex`.
 
-Ready to build on approval.
+## Files
+
+**New**
+- `src/components/audit/FlowGallery.tsx` — multi-file dropzone + ordered thumbnail grid (add / remove / reorder).
+- `src/components/audit/SequentialProgress.tsx` — stepper showing per-screen status + summary_state peek.
+- `src/components/audit/ScreenFilter.tsx` — "All / Screen 1 / Screen 2 …" filter bar for the dashboard.
+
+**Updated**
+- `src/lib/mock-audit.ts`
+  - Add `ScreenInput`, `ScreenAuditResult`, `FlowAuditResult` types.
+  - Add `runFlowAudit({ screens, context, onProgress })` async iterator that loops sequentially and emits progress.
+  - Extend `Finding` with `screenIndex`.
+- `src/components/audit/InputForm.tsx` — swap Dropzone → FlowGallery, update submit label + enable rule.
+- `src/components/audit/ResultsDashboard.tsx` — show SequentialProgress while loading; once ready, show gauge + ScreenFilter + filtered findings list.
+- `src/components/audit/FindingCard.tsx` — add `Screen N` badge.
+- `src/routes/index.tsx` — state: `screens: ScreenInput[]`, `flowResult: FlowAuditResult | null`, `progress: ScreenAuditResult[]`; submit kicks off `runFlowAudit` and streams progress.
+
+**Removed/unused**
+- `Dropzone.tsx` superseded by `FlowGallery.tsx` (delete to avoid drift).
+
+## Out of scope (this iteration)
+
+- No real AI calls; still mock. Real Lovable AI Gateway wiring (sending image + pastContext per screen, parsing JSON) is a separate step.
+- No persistence between sessions; refresh clears the flow.
+- No export/share of the report.
+- No cancel button mid-run (can add later if desired).
+
+## Notes for technical reviewers
+
+- The loop is a plain async `for…of` so it can later be swapped to call a `createServerFn` per screen without restructuring UI state.
+- `summary_state` is intentionally a short string (the only thing passed forward) — this is the exact shape needed to avoid token bloat when we move to real models.
+- Progress is pushed via callback, not polled, so the stepper updates immediately as each screen finishes.
