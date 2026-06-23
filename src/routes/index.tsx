@@ -3,22 +3,27 @@ import { useState } from "react";
 import { ScanLine } from "lucide-react";
 import { InputForm } from "@/components/audit/InputForm";
 import { ResultsDashboard } from "@/components/audit/ResultsDashboard";
-import { generateMockAudit, type AuditResult } from "@/lib/mock-audit";
+import {
+  runFlowAudit,
+  type FlowAuditResult,
+  type ScreenAuditResult,
+  type ScreenInput,
+} from "@/lib/mock-audit";
 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "UX Audit Engine — Heuristic interface review" },
+      { title: "UX Audit Engine — Sequential flow heuristic review" },
       {
         name: "description",
         content:
-          "Upload an interface screenshot and get a prioritized list of UX findings with severity, recommendations, and dev effort.",
+          "Upload an entire user flow and get a prioritized list of UX findings. Each screen is analyzed sequentially with prior-screen context.",
       },
       { property: "og:title", content: "UX Audit Engine" },
       {
         property: "og:description",
         content:
-          "Heuristic UX audit of any screen — prioritized findings, recommendations, and dev effort estimates.",
+          "Sequential UX audit across multiple screens — prioritized findings, recommendations, and dev effort estimates.",
       },
     ],
   }),
@@ -29,35 +34,36 @@ function Index() {
   const [domain, setDomain] = useState("");
   const [persona, setPersona] = useState("");
   const [goal, setGoal] = useState("");
-  const [file, setFile] = useState<File | null>(null);
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [screens, setScreens] = useState<ScreenInput[]>([]);
   const [state, setState] = useState<"idle" | "loading" | "ready">("idle");
-  const [result, setResult] = useState<AuditResult | null>(null);
+  const [progress, setProgress] = useState<ScreenAuditResult[]>([]);
+  const [result, setResult] = useState<FlowAuditResult | null>(null);
 
   const handleChange = (patch: {
     domain?: string;
     persona?: string;
     goal?: string;
-    file?: File | null;
-    previewUrl?: string | null;
+    screens?: ScreenInput[];
   }) => {
     if (patch.domain !== undefined) setDomain(patch.domain);
     if (patch.persona !== undefined) setPersona(patch.persona);
     if (patch.goal !== undefined) setGoal(patch.goal);
-    if (patch.file !== undefined) setFile(patch.file);
-    if (patch.previewUrl !== undefined) {
-      if (previewUrl && patch.previewUrl !== previewUrl) URL.revokeObjectURL(previewUrl);
-      setPreviewUrl(patch.previewUrl);
-    }
+    if (patch.screens !== undefined) setScreens(patch.screens);
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     setState("loading");
+    setProgress([]);
     setResult(null);
-    setTimeout(() => {
-      setResult(generateMockAudit());
-      setState("ready");
-    }, 1200);
+    const final = await runFlowAudit({
+      screens,
+      context: { domain, persona, goal },
+      onProgress: (r) => {
+        setProgress((prev) => [...prev, r]);
+      },
+    });
+    setResult(final);
+    setState("ready");
   };
 
   return (
@@ -71,12 +77,12 @@ function Index() {
             <div>
               <h1 className="text-sm font-semibold tracking-tight">UX Audit Engine</h1>
               <div className="text-[11px] text-muted-foreground">
-                Heuristic review for product teams
+                Sequential heuristic review for product flows
               </div>
             </div>
           </div>
           <div className="hidden text-xs text-muted-foreground sm:block">
-            Mock analysis · No data leaves your browser
+            Mock analysis · Screens processed one-by-one with chained context
           </div>
         </div>
       </header>
@@ -87,15 +93,19 @@ function Index() {
             domain={domain}
             persona={persona}
             goal={goal}
-            file={file}
-            previewUrl={previewUrl}
+            screens={screens}
             isAnalyzing={state === "loading"}
             onChange={handleChange}
             onSubmit={handleSubmit}
           />
         </section>
         <section>
-          <ResultsDashboard state={state} result={result} />
+          <ResultsDashboard
+            state={state}
+            screens={screens}
+            progress={progress}
+            result={result}
+          />
         </section>
       </main>
     </div>

@@ -1,5 +1,5 @@
 import type { Finding, Severity } from "@/lib/mock-audit";
-import { MapPin, Wrench } from "lucide-react";
+import { MapPin, Wrench, Layers } from "lucide-react";
 
 const sevMeta: Record<
   Severity,
@@ -44,6 +44,10 @@ export function FindingCard({ finding }: { finding: Finding }) {
             className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wider ${meta.pillClass}`}
           >
             Severity {finding.severity} · {meta.label}
+          </span>
+          <span className="inline-flex items-center gap-1 rounded-full border border-border bg-muted/40 px-2 py-0.5 text-[11px] font-medium text-foreground/80">
+            <Layers size={11} />
+            Screen {finding.screenIndex + 1}
           </span>
           <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
             <MapPin size={12} />
