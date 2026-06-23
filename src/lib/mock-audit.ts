@@ -25,10 +25,22 @@ export interface AuditContext {
   goal: string;
 }
 
+/**
+ * Lean chronological marker passed from one screen's analysis to the next.
+ * Intentionally excludes findings, violations, justifications, or any audit
+ * verdict — only the prior screen's identity and the user action that led
+ * into the next screen. Keeps the API call payload bounded.
+ */
+export interface PastContext {
+  previousScreenLabel: string;
+  actionSummary: string;
+}
+
 export interface ScreenAuditResult {
   screenIndex: number;
   screenLabel: string;
   summary_state: string;
+  action_summary: string;
   findings: Finding[];
 }
 
