@@ -25,10 +25,22 @@ export interface AuditContext {
   goal: string;
 }
 
+/**
+ * Lean chronological marker passed from one screen's analysis to the next.
+ * Intentionally excludes findings, violations, justifications, or any audit
+ * verdict — only the prior screen's identity and the user action that led
+ * into the next screen. Keeps the API call payload bounded.
+ */
+export interface PastContext {
+  previousScreenLabel: string;
+  actionSummary: string;
+}
+
 export interface ScreenAuditResult {
   screenIndex: number;
   screenLabel: string;
   summary_state: string;
+  action_summary: string;
   findings: Finding[];
 }
 
@@ -144,11 +156,24 @@ function buildSummaryState(screenIndex: number, fileName: string): string {
   return `Screen ${screenIndex + 1} (${fileName}) — ${arch}.`;
 }
 
+function buildActionSummary(screenIndex: number): string {
+  const actions = [
+    "User landed on the entry surface.",
+    "User submitted credentials to authenticate.",
+    "User performed the primary task action.",
+    "User reviewed details before confirming.",
+    "User reached the success outcome.",
+    "User adjusted configuration preferences.",
+  ];
+  return actions[screenIndex % actions.length];
+}
+
 async function analyzeScreen(args: {
   screen: ScreenInput;
   index: number;
   context: AuditContext;
-  pastContext: string | null;
+  // Only chronological marker — never findings from prior screens.
+  pastContext: PastContext | null;
 }): Promise<ScreenAuditResult> {
   const { screen, index, pastContext } = args;
   // Simulate per-screen latency.
@@ -162,9 +187,10 @@ async function analyzeScreen(args: {
 
   const findings: Finding[] = Array.from(picks).map((poolIdx, i) => {
     const base = POOL[poolIdx];
+    // Reference only the prior screen label + user action — never prior findings.
     const tiedToPast =
       pastContext && i === 0
-        ? ` Following prior context — ${pastContext} — this screen should preserve continuity.`
+        ? ` Coming from ${pastContext.previousScreenLabel} (${pastContext.actionSummary}), this screen should preserve continuity.`
         : "";
     return {
       ...base,
@@ -178,6 +204,7 @@ async function analyzeScreen(args: {
     screenIndex: index,
     screenLabel: `Screen ${index + 1}`,
     summary_state: buildSummaryState(index, screen.file.name),
+    action_summary: buildActionSummary(index),
     findings,
   };
 }
@@ -189,7 +216,8 @@ export async function runFlowAudit(args: {
 }): Promise<FlowAuditResult> {
   const { screens, context, onProgress } = args;
   const results: ScreenAuditResult[] = [];
-  let pastContext: string | null = null;
+  // Lean chronological marker only. Findings are NEVER chained forward.
+  let pastContext: PastContext | null = null;
 
   for (let i = 0; i < screens.length; i++) {
     const result = await analyzeScreen({
@@ -199,7 +227,10 @@ export async function runFlowAudit(args: {
       pastContext,
     });
     results.push(result);
-    pastContext = result.summary_state;
+    pastContext = {
+      previousScreenLabel: result.screenLabel,
+      actionSummary: result.action_summary,
+    };
     onProgress?.(result, i, screens.length);
   }
 

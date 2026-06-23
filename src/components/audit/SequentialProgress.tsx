@@ -50,15 +50,17 @@ export function SequentialProgress({ screens, completed }: Props) {
                 </div>
                 {result ? (
                   <p className="mt-1 line-clamp-2 text-[11px] text-muted-foreground">
-                    {result.summary_state}{" "}
                     <span className="font-medium text-foreground/80">
-                      · {result.findings.length} finding
-                      {result.findings.length === 1 ? "" : "s"}
-                    </span>
+                      {result.action_summary}
+                    </span>{" "}
+                    · {result.findings.length} finding
+                    {result.findings.length === 1 ? "" : "s"}
                   </p>
                 ) : active ? (
                   <p className="mt-1 text-[11px] text-muted-foreground">
-                    Analyzing with prior context…
+                    {i > 0
+                      ? `Analyzing with chronological marker from Screen ${i}…`
+                      : "Analyzing…"}
                   </p>
                 ) : (
                   <p className="mt-1 text-[11px] text-muted-foreground">Queued</p>
