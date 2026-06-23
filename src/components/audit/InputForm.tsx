@@ -1,27 +1,26 @@
 import { Loader2, Sparkles } from "lucide-react";
-import { Dropzone } from "./Dropzone";
+import { FlowGallery } from "./FlowGallery";
+import type { ScreenInput } from "@/lib/mock-audit";
 
 interface InputFormProps {
   domain: string;
   persona: string;
   goal: string;
-  file: File | null;
-  previewUrl: string | null;
+  screens: ScreenInput[];
   isAnalyzing: boolean;
   onChange: (patch: {
     domain?: string;
     persona?: string;
     goal?: string;
-    file?: File | null;
-    previewUrl?: string | null;
+    screens?: ScreenInput[];
   }) => void;
   onSubmit: () => void;
 }
 
 export function InputForm(props: InputFormProps) {
-  const { domain, persona, goal, file, previewUrl, isAnalyzing, onChange, onSubmit } = props;
+  const { domain, persona, goal, screens, isAnalyzing, onChange, onSubmit } = props;
   const canSubmit = Boolean(
-    domain.trim() && persona.trim() && goal.trim() && file && !isAnalyzing,
+    domain.trim() && persona.trim() && goal.trim() && screens.length > 0 && !isAnalyzing,
   );
 
   return (
@@ -68,11 +67,13 @@ export function InputForm(props: InputFormProps) {
         />
       </Field>
 
-      <Field label="Interface Screenshot" hint="Single image of the screen to audit">
-        <Dropzone
-          file={file}
-          previewUrl={previewUrl}
-          onChange={(f, url) => onChange({ file: f, previewUrl: url })}
+      <Field
+        label="Flow screens"
+        hint="Upload screens in order — they'll be analyzed sequentially with prior-screen context"
+      >
+        <FlowGallery
+          screens={screens}
+          onChange={(next) => onChange({ screens: next })}
         />
       </Field>
 
@@ -84,12 +85,12 @@ export function InputForm(props: InputFormProps) {
         {isAnalyzing ? (
           <>
             <Loader2 size={16} className="animate-spin" />
-            Analyzing interface…
+            Analyzing flow…
           </>
         ) : (
           <>
             <Sparkles size={16} />
-            Analyze Interface
+            Analyze Flow{screens.length > 0 ? ` (${screens.length} screen${screens.length === 1 ? "" : "s"})` : ""}
           </>
         )}
       </button>

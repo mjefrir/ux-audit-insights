@@ -1,11 +1,21 @@
-import type { AuditResult, Severity } from "@/lib/mock-audit";
+import { useState } from "react";
+import type {
+  FlowAuditResult,
+  ScreenAuditResult,
+  ScreenInput,
+  Severity,
+} from "@/lib/mock-audit";
 import { HealthGauge } from "./HealthGauge";
 import { FindingCard } from "./FindingCard";
-import { Gauge, Loader2, ScanSearch } from "lucide-react";
+import { SequentialProgress } from "./SequentialProgress";
+import { ScreenFilter } from "./ScreenFilter";
+import { Gauge, ScanSearch } from "lucide-react";
 
 interface Props {
   state: "idle" | "loading" | "ready";
-  result: AuditResult | null;
+  screens: ScreenInput[];
+  progress: ScreenAuditResult[];
+  result: FlowAuditResult | null;
 }
 
 const sevOrder: Severity[] = [4, 3, 2, 1];
@@ -22,32 +32,35 @@ const sevChipClass: Record<Severity, string> = {
   1: "bg-sev-cosmetic-soft text-foreground/70",
 };
 
-export function ResultsDashboard({ state, result }: Props) {
+export function ResultsDashboard({ state, screens, progress, result }: Props) {
+  const [filter, setFilter] = useState<number | "all">("all");
+
   if (state === "idle") {
     return (
       <EmptyShell
         icon={<ScanSearch size={28} />}
         title="Run an analysis to see results"
-        body="Fill the form and click Analyze Interface. Findings will appear here, sorted by severity."
+        body="Upload your flow screens and click Analyze Flow. Each screen is reviewed in order, carrying context forward."
       />
     );
   }
 
   if (state === "loading" || !result) {
-    return (
-      <EmptyShell
-        icon={<Loader2 size={28} className="animate-spin" />}
-        title="Analyzing interface…"
-        body="Reviewing your screenshot against heuristic and accessibility checks."
-      />
-    );
+    return <SequentialProgress screens={screens} completed={progress} />;
   }
 
+  const perScreenCounts = result.screens.map((s) => s.findings.length);
+  const visible =
+    filter === "all"
+      ? result.findings
+      : result.findings.filter((f) => f.screenIndex === filter);
   const counts = sevOrder.map((s) => ({
     sev: s,
-    n: result.findings.filter((f) => f.severity === s).length,
+    n: visible.filter((f) => f.severity === s).length,
   }));
-  const sorted = [...result.findings].sort((a, b) => b.severity - a.severity);
+  const sorted = [...visible].sort(
+    (a, b) => b.severity - a.severity || a.screenIndex - b.screenIndex,
+  );
 
   return (
     <div className="flex flex-col gap-5">
@@ -59,8 +72,8 @@ export function ResultsDashboard({ state, result }: Props) {
             Overall Health Score
           </div>
           <p className="mt-1 text-sm text-foreground/80">
-            Based on {result.findings.length} findings across heuristic and accessibility
-            categories.
+            {result.findings.length} findings across {result.screens.length} screen
+            {result.screens.length === 1 ? "" : "s"}, analyzed sequentially.
           </p>
           <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4">
             {counts.map(({ sev, n }) => (
@@ -75,16 +88,42 @@ export function ResultsDashboard({ state, result }: Props) {
         </div>
       </div>
 
+      <div className="flex flex-col gap-3 rounded-2xl border bg-card p-5 shadow-sm">
+        <div className="flex items-baseline justify-between">
+          <h2 className="text-sm font-semibold tracking-tight">Filter by screen</h2>
+          <span className="text-xs text-muted-foreground">
+            Context chained: each screen analyzed with prior summary_state
+          </span>
+        </div>
+        <ScreenFilter
+          total={result.screens.length}
+          counts={perScreenCounts}
+          selected={filter}
+          onChange={setFilter}
+        />
+      </div>
+
       <div className="flex flex-col gap-3">
         <div className="flex items-baseline justify-between">
-          <h2 className="text-sm font-semibold tracking-tight">Findings</h2>
+          <h2 className="text-sm font-semibold tracking-tight">
+            Findings
+            {filter !== "all" && (
+              <span className="ml-2 text-xs font-normal text-muted-foreground">
+                · Screen {filter + 1}
+              </span>
+            )}
+          </h2>
           <span className="text-xs text-muted-foreground">
             Sorted by severity (highest first)
           </span>
         </div>
-        {sorted.map((f) => (
-          <FindingCard key={f.id} finding={f} />
-        ))}
+        {sorted.length === 0 ? (
+          <div className="rounded-xl border border-dashed bg-card/40 p-8 text-center text-sm text-muted-foreground">
+            No findings on this screen.
+          </div>
+        ) : (
+          sorted.map((f) => <FindingCard key={f.id} finding={f} />)
+        )}
       </div>
     </div>
   );
