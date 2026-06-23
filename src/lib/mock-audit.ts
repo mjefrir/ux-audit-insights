@@ -219,6 +219,14 @@ export async function runFlowAudit(args: {
   // Lean chronological marker only. Findings are NEVER chained forward.
   let pastContext: PastContext | null = null;
 
+  // Track signatures of issues already raised in prior screens so we never
+  // re-emit an identical problem/justification/recommendation on a later
+  // screen. The analyzer judges each screen on its own visual evidence; the
+  // orchestrator simply filters out duplicates that would otherwise repeat
+  // the same verdict across the flow.
+  const seenSignatures = new Set<string>();
+  const sig = (f: Finding) => `${f.location}|${f.problem}`;
+
   for (let i = 0; i < screens.length; i++) {
     const result = await analyzeScreen({
       screen: screens[i],
@@ -226,12 +234,28 @@ export async function runFlowAudit(args: {
       context,
       pastContext,
     });
-    results.push(result);
-    pastContext = {
-      previousScreenLabel: result.screenLabel,
-      actionSummary: result.action_summary,
+
+    // Drop findings whose (location + problem) signature already appeared
+    // on an earlier screen. In a real backend this is where you'd compare
+    // perceptual hashes of the two screenshots and only keep the duplicate
+    // if the frames are visually identical (i.e. true regression evidence).
+    const uniqueFindings = result.findings.filter((f) => {
+      const key = sig(f);
+      if (seenSignatures.has(key)) return false;
+      seenSignatures.add(key);
+      return true;
+    });
+
+    const dedupedResult: ScreenAuditResult = {
+      ...result,
+      findings: uniqueFindings,
     };
-    onProgress?.(result, i, screens.length);
+    results.push(dedupedResult);
+    pastContext = {
+      previousScreenLabel: dedupedResult.screenLabel,
+      actionSummary: dedupedResult.action_summary,
+    };
+    onProgress?.(dedupedResult, i, screens.length);
   }
 
   const allFindings = results.flatMap((r) => r.findings);
