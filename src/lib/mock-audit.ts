@@ -52,86 +52,110 @@ export interface FlowAuditResult {
 
 const SEV_WEIGHT: Record<Severity, number> = { 4: 18, 3: 10, 2: 5, 1: 2 };
 
-// Seeded pool of candidate findings the mock pulls from, keyed loosely by screen position.
+// Seeded pool of candidate findings. Every entry maps to exactly ONE of
+// Nielsen Norman Group's 10 Usability Heuristics. No WCAG, no Apple HIG,
+// no Material guidelines, no other frameworks are used as evaluation basis.
+// Reference: https://www.nngroup.com/articles/ten-usability-heuristics/
 const POOL: Omit<Finding, "id" | "screenIndex">[] = [
-  {
-    severity: 4,
-    location: "Primary CTA",
-    problem: "Primary action lacks sufficient contrast against background",
-    justification:
-      "Nielsen #4 (Consistency & standards) and WCAG 2.1 AA require a 4.5:1 contrast ratio. Current ratio appears ~2.8:1.",
-    recommendation: "Darken the button to primary-600 with white foreground; re-test both themes.",
-    devEffort: "Low",
-    aiConfidence: 94,
-  },
   {
     severity: 4,
     location: "Submit flow",
     problem: "No visible system status during processing",
     justification:
-      "Nielsen #1 (Visibility of system status). Users get no feedback after submit, causing double-submissions.",
-    recommendation: "Add inline button loading + non-dismissible overlay; disable the form during the request.",
+      "Heuristic #1 — Visibility of System Status. After tapping submit the interface gives no feedback (no spinner, no disabled state, no progress), so users cannot tell whether the system received their action.",
+    recommendation: "Show an inline button spinner, disable the form, and surface a progress indicator until the response returns.",
     devEffort: "Medium",
-    aiConfidence: 88,
+    aiConfidence: 90,
+  },
+  {
+    severity: 3,
+    location: "Header iconography",
+    problem: "Icons use system-jargon metaphors unfamiliar to the target persona",
+    justification:
+      "Heuristic #2 — Match Between System and the Real World. Icons reference internal product concepts rather than objects/words from the user's domain, forcing users to translate before acting.",
+    recommendation: "Replace abstract glyphs with familiar real-world metaphors and pair each icon with a short text label.",
+    devEffort: "Low",
+    aiConfidence: 82,
+  },
+  {
+    severity: 3,
+    location: "Destructive action",
+    problem: "No clear undo or exit path after a committing action",
+    justification:
+      "Heuristic #3 — User Control and Freedom. The destructive action commits immediately with no emergency exit, trapping users who tapped by mistake.",
+    recommendation: "Provide an explicit Cancel/Back affordance and a time-boxed Undo toast after the action commits.",
+    devEffort: "Medium",
+    aiConfidence: 85,
   },
   {
     severity: 3,
     location: "Top navigation",
-    problem: "Active route is not visually distinguished",
+    problem: "Active route is not visually distinguished, breaking platform convention",
     justification:
-      "Nielsen #6 (Recognition rather than recall). Users lose orientation when switching contexts.",
-    recommendation: "Add underline + foreground color on the active nav item; persist on route change.",
+      "Heuristic #4 — Consistency and Standards. Other screens in this product (and conventional navigation patterns users already know) mark the active item; this screen does not, forcing recall.",
+    recommendation: "Apply a consistent active-state treatment (underline + foreground color) matching the rest of the product.",
     devEffort: "Low",
-    aiConfidence: 91,
+    aiConfidence: 88,
   },
   {
-    severity: 3,
+    severity: 4,
     location: "Form fields",
-    problem: "Error messages appear only after submit, not inline",
+    problem: "Easy-to-confuse fields lack confirmation or constraints before commit",
     justification:
-      "Nielsen #9. Late feedback forces users to re-scan the form — costly on mobile.",
-    recommendation: "Validate on blur; show field-level errors with icon + helper text.",
+      "Heuristic #5 — Error Prevention. The form accepts ambiguous input (similar-looking options, free-text where a picker would do) without a confirmation step, inviting slips.",
+    recommendation: "Constrain input with pickers/format masks where possible and add a confirmation step for irreversible commits.",
     devEffort: "Medium",
     aiConfidence: 83,
   },
   {
-    severity: 2,
-    location: "Empty state",
-    problem: "Empty state lacks a clear next action",
-    justification:
-      "Nielsen #7. First-time users see a blank panel without guidance, slowing time-to-value.",
-    recommendation: "Add illustration + one-line explanation + primary CTA to create the first item.",
-    devEffort: "Low",
-    aiConfidence: 79,
-  },
-  {
     severity: 3,
-    location: "Continuity from previous screen",
-    problem: "Context from the prior step is not carried over visually",
+    location: "Multi-step flow",
+    problem: "Users must remember information from a previous step",
     justification:
-      "Nielsen #4 (Consistency). Users lose the thread of their task between screens; affordances differ.",
-    recommendation: "Echo a summary of the prior step (e.g. selected plan, recipient) at the top of this screen.",
+      "Heuristic #6 — Recognition Rather Than Recall. The current screen asks users to recall values (selected plan, recipient, prior input) that were entered earlier instead of surfacing them.",
+    recommendation: "Echo a compact summary of prior selections at the top of the screen so users recognize rather than recall.",
     devEffort: "Medium",
-    aiConfidence: 81,
-  },
-  {
-    severity: 1,
-    location: "Footer",
-    problem: "Inconsistent link styling between footer and body",
-    justification: "Nielsen #4. Minor cosmetic drift but reduces perceived polish.",
-    recommendation: "Unify link tokens (color, underline-offset) across surfaces.",
-    devEffort: "Low",
-    aiConfidence: 72,
+    aiConfidence: 84,
   },
   {
     severity: 2,
-    location: "Touch targets",
-    problem: "Tap targets fall below the 44×44 minimum",
+    location: "Primary task surface",
+    problem: "No accelerator for experienced users to skip repetitive steps",
     justification:
-      "WCAG 2.5.5 / Apple HIG. Small targets increase mis-taps, especially on the edges of the screen.",
-    recommendation: "Increase icon-button hit area to at least 44×44 via padding or pseudo-elements.",
+      "Heuristic #7 — Flexibility and Efficiency of Use. Every user, novice or expert, must walk the same path; there are no shortcuts, saved defaults, or bulk actions.",
+    recommendation: "Add accelerators (keyboard shortcuts, saved templates, bulk actions) that experts can opt into without burdening novices.",
+    devEffort: "Medium",
+    aiConfidence: 78,
+  },
+  {
+    severity: 2,
+    location: "Content density",
+    problem: "Screen contains visual elements that do not support the user's current goal",
+    justification:
+      "Heuristic #8 — Aesthetic and Minimalist Design. Decorative or rarely-needed content competes with the primary action for the user's attention, diluting visual hierarchy.",
+    recommendation: "Remove or progressively disclose non-essential elements so the primary action dominates the visual hierarchy.",
     devEffort: "Low",
-    aiConfidence: 86,
+    aiConfidence: 80,
+  },
+  {
+    severity: 4,
+    location: "Error messaging",
+    problem: "Error message is a generic code with no diagnosis or recovery path",
+    justification:
+      "Heuristic #9 — Help Users Recognize, Diagnose, and Recover from Errors. The message uses technical jargon (or a numeric code), does not explain the cause, and gives no constructive next step.",
+    recommendation: "Rewrite errors in plain language, state the cause precisely, and offer a concrete recovery action (retry, edit field, contact support).",
+    devEffort: "Low",
+    aiConfidence: 89,
+  },
+  {
+    severity: 2,
+    location: "Complex feature",
+    problem: "No contextual help or documentation entry point",
+    justification:
+      "Heuristic #10 — Help and Documentation. The feature exposes advanced controls but offers no inline guidance, tooltip, or link to docs, so users hit a wall when stuck.",
+    recommendation: "Add a contextual help affordance (tooltip, link to focused docs, or inline tip) located at the point of need.",
+    devEffort: "Low",
+    aiConfidence: 76,
   },
 ];
 
