@@ -13,13 +13,13 @@ import {
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "UX Audit Engine — Sequential flow heuristic review" },
+      { title: "Heuristic Evaluation Checker — Sequential flow heuristic review" },
       {
         name: "description",
         content:
           "Upload an entire user flow and get a prioritized list of UX findings. Each screen is analyzed sequentially with prior-screen context.",
       },
-      { property: "og:title", content: "UX Audit Engine" },
+      { property: "og:title", content: "Heuristic Evaluation Checker" },
       {
         property: "og:description",
         content:
@@ -75,7 +75,7 @@ function Index() {
               <ScanLine size={16} />
             </div>
             <div>
-              <h1 className="text-sm font-semibold tracking-tight">UX Audit Engine</h1>
+              <h1 className="text-sm font-semibold tracking-tight">Heuristic Evaluation Checker</h1>
               <div className="text-[11px] text-muted-foreground">
                 Sequential heuristic review for product flows
               </div>
