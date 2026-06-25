@@ -195,7 +195,8 @@ const POOL_ID: Omit<Finding, "id" | "screenIndex">[] = [
   {
     severity: 3,
     location: "Tindakan destruktif",
-    problem: "Tidak ada jalur pembatalan (undo) atau jalan keluar yang jelas setelah tindakan komitmen",
+    problem:
+      "Tidak ada jalur pembatalan (undo) atau jalan keluar yang jelas setelah tindakan komitmen",
     justification:
       "Heuristik #3 — Kontrol dan Kebebasan Pengguna. Tindakan destruktif langsung dilakukan tanpa jalan keluar darurat, menjebak pengguna yang mengetuk secara tidak sengaja.",
     recommendation:
@@ -217,7 +218,8 @@ const POOL_ID: Omit<Finding, "id" | "screenIndex">[] = [
   {
     severity: 4,
     location: "Bidang formulir",
-    problem: "Bidang yang mudah membingungkan kurang memiliki konfirmasi atau batasan sebelum komit",
+    problem:
+      "Bidang yang mudah membingungkan kurang memiliki konfirmasi atau batasan sebelum komit",
     justification:
       "Heuristik #5 — Pencegahan Kesalahan. Formulir menerima input yang ambigu (opsi yang tampak serupa, teks bebas di mana pemilih opsi dapat digunakan) tanpa langkah konfirmasi, mengundang kesalahan.",
     recommendation:

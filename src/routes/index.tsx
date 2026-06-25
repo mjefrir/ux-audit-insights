@@ -84,9 +84,7 @@ function Index() {
           </div>
 
           <div className="flex items-center gap-4">
-            <div className="hidden text-xs text-muted-foreground sm:block">
-              {t("headerHint")}
-            </div>
+            <div className="hidden text-xs text-muted-foreground sm:block">{t("headerHint")}</div>
             <div className="flex items-center gap-1 rounded-lg border bg-muted/40 p-0.5">
               <button
                 type="button"

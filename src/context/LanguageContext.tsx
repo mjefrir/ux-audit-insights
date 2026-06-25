@@ -21,7 +21,8 @@ export const translations = {
     goalHint: "What are they trying to accomplish?",
     goalPlaceholder: "Transfer money to a saved recipient in under 30s",
     flowScreensLabel: "Flow screens",
-    flowScreensHint: "Upload screens in order — they'll be analyzed sequentially with prior-screen context",
+    flowScreensHint:
+      "Upload screens in order — they'll be analyzed sequentially with prior-screen context",
     analyzeFlow: "Analyze Flow",
     analyzingFlow: "Analyzing flow…",
     // FlowGallery
@@ -32,7 +33,8 @@ export const translations = {
     removeScreen: "Remove screen",
     // ResultsDashboard
     resultsTitle: "Heuristic Evaluation Results",
-    resultsSubtitle: "Upload your flow screens and click Analyze Flow. Each screen is reviewed in order, carrying context forward.",
+    resultsSubtitle:
+      "Upload your flow screens and click Analyze Flow. Each screen is reviewed in order, carrying context forward.",
     overview: "Overview",
     heuristicViolations: "Heuristic Violations",
     sortedBySeverity: "Sorted by severity (highest first)",
@@ -80,7 +82,8 @@ export const translations = {
     goalHint: "Apa yang ingin mereka capai?",
     goalPlaceholder: "Transfer uang ke penerima tersimpan dalam kurang dari 30 detik",
     flowScreensLabel: "Layar Alur",
-    flowScreensHint: "Unggah gambar layar secara berurutan — analisis akan dilakukan berantai berdasarkan konteks layar sebelumnya",
+    flowScreensHint:
+      "Unggah gambar layar secara berurutan — analisis akan dilakukan berantai berdasarkan konteks layar sebelumnya",
     analyzeFlow: "Analisis Alur",
     analyzingFlow: "Menganalisis alur…",
     // FlowGallery
@@ -91,7 +94,8 @@ export const translations = {
     removeScreen: "Hapus layar",
     // ResultsDashboard
     resultsTitle: "Hasil Evaluasi Heuristik",
-    resultsSubtitle: "Unggah gambar layar alur Anda lalu klik Analisis Alur. Setiap layar ditinjau secara berurutan dengan membawa konteks sebelumnya.",
+    resultsSubtitle:
+      "Unggah gambar layar alur Anda lalu klik Analisis Alur. Setiap layar ditinjau secara berurutan dengan membawa konteks sebelumnya.",
     overview: "Ringkasan",
     heuristicViolations: "Pelanggaran Heuristik",
     sortedBySeverity: "Diurutkan berdasarkan tingkat keparahan (tertinggi dahulu)",

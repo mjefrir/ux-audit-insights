@@ -72,9 +72,7 @@ export function FlowGallery({ screens, onChange }: Props) {
         <div className="text-sm font-medium text-foreground">
           {screens.length ? t("addMoreScreens") : t("dropScreensHere")}
         </div>
-        <div className="text-xs text-muted-foreground">
-          {t("uploadHint")}
-        </div>
+        <div className="text-xs text-muted-foreground">{t("uploadHint")}</div>
         <input
           ref={inputRef}
           type="file"

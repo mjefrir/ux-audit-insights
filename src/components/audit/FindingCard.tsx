@@ -1,5 +1,5 @@
 import type { Finding, Severity } from "@/lib/mock-audit";
-import { MapPin, Wrench, Layers } from "lucide-react";
+import { MapPin, Layers } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
 
 const sevMeta: Record<Severity, { barClass: string; pillClass: string }> = {
@@ -21,12 +21,6 @@ const sevMeta: Record<Severity, { barClass: string; pillClass: string }> = {
   },
 };
 
-const effortClass: Record<string, string> = {
-  Low: "bg-sev-cosmetic-soft text-foreground/70",
-  Medium: "bg-sev-minor-soft text-sev-minor-foreground",
-  High: "bg-sev-major-soft text-sev-major",
-};
-
 export function FindingCard({ finding }: { finding: Finding }) {
   const { language, t } = useLanguage();
   const meta = sevMeta[finding.severity];
@@ -43,19 +37,6 @@ export function FindingCard({ finding }: { finding: Finding }) {
         return t("severityCosmetic");
       default:
         return "";
-    }
-  };
-
-  const getEffortLabel = (effort: string) => {
-    switch (effort) {
-      case "Low":
-        return t("effortLow");
-      case "Medium":
-        return t("effortMedium");
-      case "High":
-        return t("effortHigh");
-      default:
-        return effort;
     }
   };
 
@@ -84,16 +65,7 @@ export function FindingCard({ finding }: { finding: Finding }) {
         <Section title={t("justification")}>{finding.justification}</Section>
         <Section title={t("recommendation")}>{finding.recommendation}</Section>
 
-        <div className="flex flex-wrap items-center justify-between gap-3 border-t pt-3">
-          <div className="flex items-center gap-2 text-xs">
-            <Wrench size={12} className="text-muted-foreground" />
-            <span className="text-muted-foreground">{t("devEffort")}</span>
-            <span
-              className={`rounded-md px-1.5 py-0.5 text-[11px] font-medium ${effortClass[finding.devEffort]}`}
-            >
-              {getEffortLabel(finding.devEffort)}
-            </span>
-          </div>
+        <div className="flex flex-wrap items-center justify-end gap-3 border-t pt-3">
           <div className="flex min-w-[160px] items-center gap-2 text-xs">
             <span className="text-muted-foreground">{t("aiConfidence")}</span>
             <div className="relative h-1.5 w-24 overflow-hidden rounded-full bg-muted">

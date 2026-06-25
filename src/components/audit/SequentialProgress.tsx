@@ -57,7 +57,9 @@ export function SequentialProgress({ screens, completed }: Props) {
                   <p className="mt-1 line-clamp-2 text-[11px] text-muted-foreground">
                     <span className="font-medium text-foreground/80">{result.action_summary}</span>{" "}
                     · {result.findings.length}{" "}
-                    {language === "id" ? "temuan" : `finding${result.findings.length === 1 ? "" : "s"}`}
+                    {language === "id"
+                      ? "temuan"
+                      : `finding${result.findings.length === 1 ? "" : "s"}`}
                   </p>
                 ) : active ? (
                   <p className="mt-1 text-[11px] text-muted-foreground">

@@ -33,9 +33,7 @@ export function InputForm(props: InputFormProps) {
     >
       <div>
         <h2 className="text-base font-semibold tracking-tight">{t("auditContext")}</h2>
-        <p className="mt-1 text-xs text-muted-foreground">
-          {t("auditContextDesc")}
-        </p>
+        <p className="mt-1 text-xs text-muted-foreground">{t("auditContextDesc")}</p>
       </div>
 
       <Field label={t("domainLabel")} hint={t("domainHint")}>
@@ -67,10 +65,7 @@ export function InputForm(props: InputFormProps) {
         />
       </Field>
 
-      <Field
-        label={t("flowScreensLabel")}
-        hint={t("flowScreensHint")}
-      >
+      <Field label={t("flowScreensLabel")} hint={t("flowScreensHint")}>
         <FlowGallery screens={screens} onChange={(next) => onChange({ screens: next })} />
       </Field>
 
