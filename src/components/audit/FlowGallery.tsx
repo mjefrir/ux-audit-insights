@@ -1,6 +1,7 @@
 import { useCallback, useRef, useState } from "react";
 import { ImagePlus, X, GripVertical } from "lucide-react";
 import type { ScreenInput } from "@/lib/mock-audit";
+import { useLanguage } from "@/context/LanguageContext";
 
 interface Props {
   screens: ScreenInput[];
@@ -8,6 +9,7 @@ interface Props {
 }
 
 export function FlowGallery({ screens, onChange }: Props) {
+  const { t } = useLanguage();
   const [dragOver, setDragOver] = useState(false);
   const [dragIndex, setDragIndex] = useState<number | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -58,7 +60,7 @@ export function FlowGallery({ screens, onChange }: Props) {
           setDragOver(false);
           addFiles(e.dataTransfer.files);
         }}
-        className={`flex w-full flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed px-6 py-8 text-center transition ${
+        className={`flex w-full cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed px-6 py-8 text-center transition ${
           dragOver
             ? "border-foreground/40 bg-muted/60"
             : "border-border bg-muted/20 hover:bg-muted/40"
@@ -68,10 +70,10 @@ export function FlowGallery({ screens, onChange }: Props) {
           <ImagePlus size={18} />
         </div>
         <div className="text-sm font-medium text-foreground">
-          {screens.length ? "Add more screens" : "Drop screens here"}
+          {screens.length ? t("addMoreScreens") : t("dropScreensHere")}
         </div>
         <div className="text-xs text-muted-foreground">
-          PNG, JPG or WEBP · multiple files · click to browse
+          {t("uploadHint")}
         </div>
         <input
           ref={inputRef}
@@ -104,17 +106,17 @@ export function FlowGallery({ screens, onChange }: Props) {
               <div className="relative aspect-[4/3] w-full bg-muted/40">
                 <img
                   src={s.previewUrl}
-                  alt={`Screen ${i + 1}`}
+                  alt={`${t("screenLabel")} ${i + 1}`}
                   className="h-full w-full object-cover"
                 />
                 <span className="absolute left-1.5 top-1.5 rounded-md bg-foreground/85 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-background">
-                  Screen {i + 1}
+                  {t("screenLabel")} {i + 1}
                 </span>
                 <button
                   type="button"
                   onClick={() => remove(s.id)}
                   className="absolute right-1.5 top-1.5 rounded-md bg-background/80 p-1 text-foreground opacity-0 backdrop-blur transition group-hover:opacity-100 hover:bg-background"
-                  aria-label={`Remove screen ${i + 1}`}
+                  aria-label={`${t("removeScreen")} ${i + 1}`}
                 >
                   <X size={12} />
                 </button>

@@ -7,6 +7,7 @@ This iteration keeps **mock processing** (no external API) — same constraint a
 ## UX
 
 **Left panel — Flow input**
+
 - Keep Domain / Persona / Goal fields.
 - Replace single Dropzone with a **multi-image gallery uploader**:
   - Drop or browse → multiple files accepted at once.
@@ -16,6 +17,7 @@ This iteration keeps **mock processing** (no external API) — same constraint a
 - Submit button: `Analyze Flow (N screens)`, disabled until context fields + ≥1 screen.
 
 **Right panel — Sequential progress + dashboard**
+
 - While running, show a stepper:
   - `Screen 1 ✓ analyzed → Screen 2 ⏳ analyzing… → Screen 3 ⋯ queued`
   - Each completed step is expandable to peek at that screen's `summary_state` and finding count.
@@ -42,6 +44,7 @@ for i in 0..N-1:
 ```
 
 Each `analyzeScreen` returns:
+
 ```ts
 {
   screenIndex: number,
@@ -51,23 +54,27 @@ Each `analyzeScreen` returns:
 ```
 
 The mock implementation:
+
 - Simulates ~700–1200 ms per screen via `setTimeout`.
 - Picks 1–3 findings per screen from a seeded pool keyed by `screenIndex` so results feel coherent.
 - Builds a deterministic `summary_state` like `"Screen 2 — Login form with email/password and SSO options; user is mid-authentication."` that the next mock step echoes into its justification to make the chaining visible.
 - Exposes progress via a callback so UI can stream updates.
 
 Aggregation:
+
 - `overallScore` = weighted penalty across **all** findings (existing formula reused).
 - `findings` = concatenation of all per-screen findings, tagged with `screenIndex`.
 
 ## Files
 
 **New**
+
 - `src/components/audit/FlowGallery.tsx` — multi-file dropzone + ordered thumbnail grid (add / remove / reorder).
 - `src/components/audit/SequentialProgress.tsx` — stepper showing per-screen status + summary_state peek.
 - `src/components/audit/ScreenFilter.tsx` — "All / Screen 1 / Screen 2 …" filter bar for the dashboard.
 
 **Updated**
+
 - `src/lib/mock-audit.ts`
   - Add `ScreenInput`, `ScreenAuditResult`, `FlowAuditResult` types.
   - Add `runFlowAudit({ screens, context, onProgress })` async iterator that loops sequentially and emits progress.
@@ -78,6 +85,7 @@ Aggregation:
 - `src/routes/index.tsx` — state: `screens: ScreenInput[]`, `flowResult: FlowAuditResult | null`, `progress: ScreenAuditResult[]`; submit kicks off `runFlowAudit` and streams progress.
 
 **Removed/unused**
+
 - `Dropzone.tsx` superseded by `FlowGallery.tsx` (delete to avoid drift).
 
 ## Out of scope (this iteration)

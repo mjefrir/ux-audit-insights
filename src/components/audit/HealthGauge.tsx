@@ -44,9 +44,7 @@ export function HealthGauge({ score }: HealthGaugeProps) {
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center">
         <span className="text-3xl font-semibold tabular-nums tracking-tight">{score}</span>
-        <span className="text-[11px] uppercase tracking-wider text-muted-foreground">
-          {label}
-        </span>
+        <span className="text-[11px] uppercase tracking-wider text-muted-foreground">{label}</span>
       </div>
     </div>
   );

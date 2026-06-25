@@ -3,6 +3,7 @@ import { useState } from "react";
 import { ScanLine } from "lucide-react";
 import { InputForm } from "@/components/audit/InputForm";
 import { ResultsDashboard } from "@/components/audit/ResultsDashboard";
+import { useLanguage } from "@/context/LanguageContext";
 import {
   runFlowAudit,
   type FlowAuditResult,
@@ -31,6 +32,7 @@ export const Route = createFileRoute("/")({
 });
 
 function Index() {
+  const { language, setLanguage, t } = useLanguage();
   const [domain, setDomain] = useState("");
   const [persona, setPersona] = useState("");
   const [goal, setGoal] = useState("");
@@ -58,6 +60,7 @@ function Index() {
     const final = await runFlowAudit({
       screens,
       context: { domain, persona, goal },
+      language,
       onProgress: (r) => {
         setProgress((prev) => [...prev, r]);
       },
@@ -75,14 +78,39 @@ function Index() {
               <ScanLine size={16} />
             </div>
             <div>
-              <h1 className="text-sm font-semibold tracking-tight">Heuristic Evaluation Checker</h1>
-              <div className="text-[11px] text-muted-foreground">
-                Sequential heuristic review for product flows
-              </div>
+              <h1 className="text-sm font-semibold tracking-tight">{t("title")}</h1>
+              <div className="text-[11px] text-muted-foreground">{t("subtitle")}</div>
             </div>
           </div>
-          <div className="hidden text-xs text-muted-foreground sm:block">
-            Mock analysis · Screens processed one-by-one with chained context
+
+          <div className="flex items-center gap-4">
+            <div className="hidden text-xs text-muted-foreground sm:block">
+              {t("headerHint")}
+            </div>
+            <div className="flex items-center gap-1 rounded-lg border bg-muted/40 p-0.5">
+              <button
+                type="button"
+                onClick={() => setLanguage("en")}
+                className={`cursor-pointer rounded-md px-2 py-1 text-[11px] font-semibold transition ${
+                  language === "en"
+                    ? "bg-card text-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                EN
+              </button>
+              <button
+                type="button"
+                onClick={() => setLanguage("id")}
+                className={`cursor-pointer rounded-md px-2 py-1 text-[11px] font-semibold transition ${
+                  language === "id"
+                    ? "bg-card text-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                ID
+              </button>
+            </div>
           </div>
         </div>
       </header>
@@ -100,12 +128,7 @@ function Index() {
           />
         </section>
         <section>
-          <ResultsDashboard
-            state={state}
-            screens={screens}
-            progress={progress}
-            result={result}
-          />
+          <ResultsDashboard state={state} screens={screens} progress={progress} result={result} />
         </section>
       </main>
     </div>

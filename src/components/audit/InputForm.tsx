@@ -1,6 +1,7 @@
 import { Loader2, Sparkles } from "lucide-react";
 import { FlowGallery } from "./FlowGallery";
 import type { ScreenInput } from "@/lib/mock-audit";
+import { useLanguage } from "@/context/LanguageContext";
 
 interface InputFormProps {
   domain: string;
@@ -19,9 +20,8 @@ interface InputFormProps {
 
 export function InputForm(props: InputFormProps) {
   const { domain, persona, goal, screens, isAnalyzing, onChange, onSubmit } = props;
-  const canSubmit = Boolean(
-    domain.trim() && persona.trim() && goal.trim() && screens.length > 0 && !isAnalyzing,
-  );
+  const { language, t } = useLanguage();
+  const canSubmit = Boolean(screens.length > 0 && !isAnalyzing);
 
   return (
     <form
@@ -32,65 +32,69 @@ export function InputForm(props: InputFormProps) {
       className="flex flex-col gap-5 rounded-2xl border bg-card p-6 shadow-sm"
     >
       <div>
-        <h2 className="text-base font-semibold tracking-tight">Audit context</h2>
+        <h2 className="text-base font-semibold tracking-tight">{t("auditContext")}</h2>
         <p className="mt-1 text-xs text-muted-foreground">
-          Provide product context so findings are tailored to your users.
+          {t("auditContextDesc")}
         </p>
       </div>
 
-      <Field label="Product Domain & Stage" hint="e.g. Fintech mobile app — MVP">
+      <Field label={t("domainLabel")} hint={t("domainHint")}>
         <input
           value={domain}
           onChange={(e) => onChange({ domain: e.target.value })}
-          placeholder="Fintech — MVP"
+          placeholder={t("domainPlaceholder")}
           className="input-base"
         />
       </Field>
 
-      <Field label="Target User Persona" hint="Who is this for?">
+      <Field label={t("personaLabel")} hint={t("personaHint")}>
         <textarea
           value={persona}
           onChange={(e) => onChange({ persona: e.target.value })}
-          placeholder="Freelancers, 25–40, managing irregular income"
+          placeholder={t("personaPlaceholder")}
           rows={3}
           className="input-base resize-none"
         />
       </Field>
 
-      <Field label="Current User Goal" hint="What are they trying to accomplish?">
+      <Field label={t("goalLabel")} hint={t("goalHint")}>
         <textarea
           value={goal}
           onChange={(e) => onChange({ goal: e.target.value })}
-          placeholder="Transfer money to a saved recipient in under 30s"
+          placeholder={t("goalPlaceholder")}
           rows={3}
           className="input-base resize-none"
         />
       </Field>
 
       <Field
-        label="Flow screens"
-        hint="Upload screens in order — they'll be analyzed sequentially with prior-screen context"
+        label={t("flowScreensLabel")}
+        hint={t("flowScreensHint")}
       >
-        <FlowGallery
-          screens={screens}
-          onChange={(next) => onChange({ screens: next })}
-        />
+        <FlowGallery screens={screens} onChange={(next) => onChange({ screens: next })} />
       </Field>
 
       <button
         type="submit"
         disabled={!canSubmit}
-        className="mt-1 inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground shadow-sm transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
+        className={`mt-1 inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium shadow-sm transition-all duration-300 disabled:cursor-not-allowed disabled:opacity-40 ${
+          canSubmit
+            ? "bg-emerald-600 text-white btn-glow hover:scale-[1.02] hover:bg-emerald-500 active:scale-[0.98]"
+            : "bg-primary text-primary-foreground"
+        }`}
       >
         {isAnalyzing ? (
           <>
             <Loader2 size={16} className="animate-spin" />
-            Analyzing flow…
+            {t("analyzingFlow")}
           </>
         ) : (
           <>
             <Sparkles size={16} />
-            Analyze Flow{screens.length > 0 ? ` (${screens.length} screen${screens.length === 1 ? "" : "s"})` : ""}
+            {t("analyzeFlow")}
+            {screens.length > 0
+              ? ` (${screens.length} ${language === "id" ? "layar" : `screen${screens.length === 1 ? "" : "s"}`})`
+              : ""}
           </>
         )}
       </button>
@@ -111,6 +115,19 @@ export function InputForm(props: InputFormProps) {
         .input-base:focus {
           border-color: var(--color-foreground);
           box-shadow: 0 0 0 3px color-mix(in oklab, var(--color-foreground) 10%, transparent);
+        }
+        .btn-glow {
+          box-shadow: 0 0 12px color-mix(in oklab, #10b981 30%, transparent);
+          animation: pulse-glow 2s infinite ease-in-out;
+        }
+        @keyframes pulse-glow {
+          0%, 100% {
+            box-shadow: 0 0 12px color-mix(in oklab, #10b981 25%, transparent);
+          }
+          50% {
+            box-shadow: 0 0 20px color-mix(in oklab, #10b981 55%, transparent),
+                        0 0 4px color-mix(in oklab, #10b981 20%, transparent);
+          }
         }
       `}</style>
     </form>

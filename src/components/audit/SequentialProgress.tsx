@@ -1,5 +1,6 @@
 import { Check, Loader2, Circle } from "lucide-react";
 import type { ScreenAuditResult, ScreenInput } from "@/lib/mock-audit";
+import { useLanguage } from "@/context/LanguageContext";
 
 interface Props {
   screens: ScreenInput[];
@@ -7,14 +8,18 @@ interface Props {
 }
 
 export function SequentialProgress({ screens, completed }: Props) {
+  const { language, t } = useLanguage();
   const currentIndex = completed.length;
 
   return (
     <div className="rounded-2xl border bg-card p-5 shadow-sm">
       <div className="mb-4 flex items-baseline justify-between">
-        <h2 className="text-sm font-semibold tracking-tight">Sequential analysis</h2>
+        <h2 className="text-sm font-semibold tracking-tight">
+          {language === "id" ? "Analisis sekuensial" : "Sequential analysis"}
+        </h2>
         <span className="text-xs text-muted-foreground tabular-nums">
-          {completed.length} / {screens.length} screens
+          {completed.length} / {screens.length}{" "}
+          {language === "id" ? "layar" : `screen${screens.length === 1 ? "" : "s"}`}
         </span>
       </div>
 
@@ -43,27 +48,29 @@ export function SequentialProgress({ screens, completed }: Props) {
               </div>
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2">
-                  <span className="text-xs font-semibold">Screen {i + 1}</span>
-                  <span className="truncate text-[11px] text-muted-foreground">
-                    {s.file.name}
+                  <span className="text-xs font-semibold">
+                    {language === "id" ? "Layar" : "Screen"} {i + 1}
                   </span>
+                  <span className="truncate text-[11px] text-muted-foreground">{s.file.name}</span>
                 </div>
                 {result ? (
                   <p className="mt-1 line-clamp-2 text-[11px] text-muted-foreground">
-                    <span className="font-medium text-foreground/80">
-                      {result.action_summary}
-                    </span>{" "}
-                    · {result.findings.length} finding
-                    {result.findings.length === 1 ? "" : "s"}
+                    <span className="font-medium text-foreground/80">{result.action_summary}</span>{" "}
+                    · {result.findings.length}{" "}
+                    {language === "id" ? "temuan" : `finding${result.findings.length === 1 ? "" : "s"}`}
                   </p>
                 ) : active ? (
                   <p className="mt-1 text-[11px] text-muted-foreground">
                     {i > 0
-                      ? `Analyzing with chronological marker from Screen ${i}…`
-                      : "Analyzing…"}
+                      ? `${t("progressChained")} ${i}…`
+                      : language === "id"
+                        ? "Menganalisis…"
+                        : "Analyzing…"}
                   </p>
                 ) : (
-                  <p className="mt-1 text-[11px] text-muted-foreground">Queued</p>
+                  <p className="mt-1 text-[11px] text-muted-foreground capitalize">
+                    {t("progressQueued")}
+                  </p>
                 )}
               </div>
               <div className="flex-shrink-0 self-center">
